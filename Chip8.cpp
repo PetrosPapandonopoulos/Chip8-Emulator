@@ -44,3 +44,19 @@ void Chip8::initialize() {
         memory[i] = chip8Fontset[i];
     }
 }
+
+void Chip8::loadGame(const char *romPath) {
+    int fsize;
+
+    std::ifstream rom(romPath, std::ios::binary | std::ios::ate);
+    if(rom.fail()){
+        throw std::runtime_error("Error: file");
+    }
+
+    fsize = rom.tellg();
+    rom.seekg(0, std::ios::beg);
+
+    rom.read(reinterpret_cast<char *>(memory + 0x200), fsize);
+
+    rom.close();
+}
