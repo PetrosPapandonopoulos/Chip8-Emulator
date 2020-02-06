@@ -4,7 +4,9 @@
 
 #include <algorithm>
 #include <fstream>
+#include <time.h>
 #include "Chip8.h"
+
 
 void Chip8::initialize() {
     unsigned char chip8Fontset[80] =
@@ -59,4 +61,112 @@ void Chip8::loadGame(const char *romPath) {
     rom.read(reinterpret_cast<char *>(memory + 0x200), fsize);
 
     rom.close();
+}
+
+void Chip8::emulateCycle() {
+    srand(time(NULL));
+    //Fetch opcode
+    opcode = memory[pc] << 8 | memory[pc + 1];
+
+    //Decode opcode
+    switch(opcode & 0xF000){
+        case 0x0000: {
+
+            break;
+        }
+        case 0x1000: {
+            pc = opcode & 0x0FFF;
+            break;
+        }
+        case 0x2000: {
+            stack[sp] = pc;
+            ++sp;
+            pc = opcode & 0x0FFF;
+            break;
+        }
+        case 0x3000: {
+            if(V[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF)){
+                pc += 2;
+            }
+            break;
+        }
+        case 0x4000: {
+            if(V[(opcode & 0x0F00) >> 8] != (opcode & 0x00FF)){
+                pc += 2;
+            }
+            break;
+        }
+        case 0x5000: {
+            if(V[(opcode & 0x0F00) >> 8] == V[(opcode & 0x00F0) >> 4]){
+                pc += 2;
+            }
+            break;
+        }
+        case 0x6000: {
+            V[(opcode & 0x0F00) >> 8] = opcode & 0x00FF;
+            break;
+        }
+        case 0x7000: {
+            V[(opcode & 0x0F00) >> 8] += opcode & 0x00FF;
+            break;
+        }
+        case 0x8000: {
+            break;
+        }
+        case 0x9000: {
+            if(V[(opcode & 0x0F00) >> 8] != V[(opcode & 0x00F0) >> 4]){
+                pc += 2;
+            }
+
+            break;
+        }
+        case 0xA000: {                      // ANNN: Sets I to the address NNN
+            I = opcode & 0x0FFF;            // use mask 0x0FFF in order to take the address
+            pc += 2;
+            break;
+        }
+        case 0xB000: {                      //BNNN: Jumps to the address NNN plus V0
+            pc = V[0] + opcode & 0x0FFF;
+            break;
+        }
+        case 0xC000: {           //CXNN: Sets V[X] to the result of a & operation on a random number (0 to 255) and NN
+            V[opcode & 0x0F00] = (rand() % 256) & (opcode & 0x00FF);
+            break;
+        }
+        case 0xD000: {
+            unsigned short x = V[(opcode & 0x0F00) >> 8];
+            unsigned short y = V[(opcode & 0x00F0) >> 4];
+            unsigned short height = opcode & 0x000F;
+            unsigned short pixel;
+
+            V[0xF] = 0;
+            for (int yline = 0; yline < height; yline++)
+            {
+                pixel = memory[I + yline];
+                for(int xline = 0; xline < 8; xline++)
+                {
+                    if((pixel & (0x80 >> xline)) != 0)
+                    {
+                        if(gfx[(x + xline + ((y + yline) * 64))] == 1)
+                            V[0xF] = 1;
+                        gfx[x + xline + ((y + yline) * 64)] ^= 1;
+                    }
+                }
+            }
+
+            drawFlag = true;
+            pc += 2;
+            break;
+        }
+        case 0xE000: {
+
+            break;
+        }
+        case 0xF000: {
+
+            break;
+        }
+    }
+
+
 }
