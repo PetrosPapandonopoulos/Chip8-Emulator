@@ -22,12 +22,16 @@ class Chip8 {
         unsigned char delayTimer;		//The two timer registers that count at 60 Hz
         unsigned char soundTimer;		//The system’s buzzer sounds whenever the sound timer reaches zero
         bool drawFlag;
+        bool isRunning;
+        bool waitForKey;
 
     public:
         void initialize();
-        void emulateCycle();
+        bool emulateCycle();
         void loadGame(const char* romPath);
-        void setKeys();
+        bool DecodeOpcode();
+        void keyPressed(char key);
+        void keyReleased(char key);
 
 
 };

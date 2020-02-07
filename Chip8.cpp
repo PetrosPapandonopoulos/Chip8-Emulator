@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <fstream>
-#include <time.h>
+#include <ctime>
 #include "Chip8.h"
 
 
@@ -35,6 +35,8 @@ void Chip8::initialize() {
     sp     = 0;      // Initialize stack pointer
     delayTimer = 0;  // Initialize delayTimer
     soundTimer = 0;  // Initialize soundTimer
+    isRunning = true;
+    waitForKey = false;
 
     std::fill_n(gfx, 64 * 32, 0);
     std::fill_n(stack, 16, 0);
@@ -65,14 +67,42 @@ void Chip8::loadGame(const char *romPath) {
     rom.close();
 }
 
-void Chip8::emulateCycle() {
-    //Fetch opcode
-    opcode = memory[pc] << 8 | memory[pc + 1];
+bool Chip8::emulateCycle(){
+    for(;;){
+        //Fetch opcode
+        opcode = memory[pc] << 8 | memory[pc+1];
+        DecodeOpcode();
 
+
+
+
+        if(delayTimer > 0){
+            --delayTimer;
+        }
+        if(soundTimer > 0){
+            if(soundTimer == 1){
+                //sound must be heard
+            }
+            --soundTimer;
+        }
+    }
+
+
+}
+
+void Chip8::keyPressed(char key){
+    keys[key] = true;
+}
+
+void Chip8::keyReleased(char key){
+    keys[key] = false;
+}
+
+bool Chip8::DecodeOpcode() {
     //Decode opcode
     switch(opcode & 0xF000){
         case 0x0000:{
-            switch(opcode && 0x00FF){
+            switch(opcode & 0x00FF){
                 case 0x00E0:{           //00E0: Clears the screen
                     std::fill_n(gfx, 64 * 32, 0);
                     pc += 2;
@@ -149,7 +179,7 @@ void Chip8::emulateCycle() {
                     pc += 2;
                     break;
                 }
-                case 0x0003:{       //8XY3: 	Sets VX to VX xor VY
+                case 0x0003:{       //8XY3: Sets VX to VX xor VY
                     V[(opcode & 0x0F00) >> 8] ^= V[(opcode & 0x00F0) >> 4];
                     pc += 2;
                     break;
@@ -288,34 +318,68 @@ void Chip8::emulateCycle() {
                     pc += 2;
                     break;
                 }
-                case 0x000A:{
+                case 0x000A:{       //A key press is awaited, and then stored in VX. (Blocking Operation.
+                                    // All instruction halted until next key event
+                    waitForKey = true;
+                    isRunning = false;
                     break;
                 }
-                case 0x0015:{
+                case 0x0015:{       //FX15: Sets the delay timer to VX
+                    delayTimer = V[(opcode & 0x0F00) >> 8];
+                    pc += 2;
                     break;
                 }
-                case 0x0018:{
+                case 0x0018:{       //FX18: Sets the sound timer to VX
+                    soundTimer = V[(opcode & 0x0F00) >> 8];
                     break;
                 }
-                case 0x001E:{
+                case 0x001E:{       /*Adds VX to I.
+                                     *VF is set to 1 when there is a range
+                                     *overflow (I+VX>0xFFF), and to 0 when there isn't*/
+
+                    if(I + V[(opcode & 0x0F00) >> 8] > 0xFFF){
+                        V[0xF] = 1;
+                    }
+                    else{
+                        V[0xF] = 0;
+                    }
+                    I += V[(opcode & 0x0F00) >> 8];
+                    pc += 2;
                     break;
                 }
-                case 0x0029:{
+                case 0x0029:{       //FX29: Sets I to the location of the sprite for the character in VX
+                                    //Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+                    I = V[(opcode & 0x0F00) >> 8] * 5;
+                    pc += 2;
                     break;
                 }
                 case 0x0033:{
+                    unsigned short X = (opcode & 0x0F00) >> 8;
+                    memory[I] = V[X] / 100;
+                    memory[I + 1] = (V[X] % 100) / 10;
+                    memory[I + 2] = V[X] % 10;
+                    pc += 2;
                     break;
                 }
                 case 0x0055:{
+                    auto X = (opcode & 0x0F00) >> 8;
+                    for(auto i = 0; i<=X ; i++){
+                        memory[I+i] = V[X];
+                    }
+                    pc += 2;
                     break;
                 }
                 case 0x0065:{
+                    auto X = (opcode & 0x0f00) >> 8;
+                    for (auto i = 0; i <= X; i++){
+                        V[i] = memory[I + i];
+                    }
+                    pc += 2;
                     break;
                 }
             }
             break;
         }
     }
-
-
+    return true;
 }
