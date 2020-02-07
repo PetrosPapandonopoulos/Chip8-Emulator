@@ -8,7 +8,7 @@
 #include "Chip8.h"
 
 
-void Chip8::initialize() {
+Chip8::Chip8() {
     unsigned char chip8Fontset[80] =
             {
                     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -67,30 +67,37 @@ void Chip8::loadGame(const char *romPath) {
     rom.close();
 }
 
-bool Chip8::emulateCycle(){
-    for(;;){
+bool Chip8::emulateCycle(int cycle){
         //Fetch opcode
-        opcode = memory[pc] << 8 | memory[pc+1];
+    for (int i = 0; i < cycle; i++)
+    {
+        opcode = memory[pc] << 8 | memory[pc + 1];
         DecodeOpcode();
-
-
-
-
-        if(delayTimer > 0){
+        if (delayTimer > 0) {
             --delayTimer;
         }
-        if(soundTimer > 0){
-            if(soundTimer == 1){
-                //sound must be heard
+        if (soundTimer > 0) {
+            if (soundTimer == 1) {
+                playSound();
             }
             --soundTimer;
         }
     }
-
-
+    return true;
 }
 
+unsigned char Chip8::getPixel(int i) {
+    return gfx[i];
+}
+
+
 void Chip8::keyPressed(char key){
+    if(waitForKey){         
+        waitForKey = false;
+        isRunning = true;
+        V[(opcode & 0x0f00) >> 8] = key;
+        pc += 2;
+    }
     keys[key] = true;
 }
 
@@ -322,6 +329,7 @@ bool Chip8::DecodeOpcode() {
                                     // All instruction halted until next key event
                     waitForKey = true;
                     isRunning = false;
+
                     break;
                 }
                 case 0x0015:{       //FX15: Sets the delay timer to VX

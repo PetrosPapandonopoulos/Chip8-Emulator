@@ -2,7 +2,7 @@
 // Created by Petros on 2/6/2020.
 //
 
-#ifndef CHIP8VM_CHIP8_H
+#ifndef CHIP8VM_CHIP8_H                 //Headerguards
 #define CHIP8VM_CHIP8_H
 class Chip8 {
     private:
@@ -24,14 +24,16 @@ class Chip8 {
         bool drawFlag;
         bool isRunning;
         bool waitForKey;
-
+           
     public:
-        void initialize();
-        bool emulateCycle();
+        Chip8();
+        bool emulateCycle(int cycle);
         void loadGame(const char* romPath);
         bool DecodeOpcode();
         void keyPressed(char key);
         void keyReleased(char key);
+        void playSound();
+        unsigned char getPixel(int i);
 
 
 };
