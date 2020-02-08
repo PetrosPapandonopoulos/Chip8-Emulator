@@ -16,7 +16,6 @@ int main(int argc, char** argv) {
         chip.loadGame("tetris.chip8");
     }
     catch (const std::runtime_error & error) {
-        // TODO: popup window
         window.close();
         std::cout << "error reading rom" << std::endl;
         exit(2);
@@ -76,7 +75,6 @@ int main(int argc, char** argv) {
         }
 
         if (!chip.emulateCycle(1)) {
-            // TODO: popup window
             std::cout << "Emulation failed" << std::endl;
             window.close();
             exit(3);

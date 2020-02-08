@@ -82,11 +82,8 @@ bool Chip8::emulateCycle(int cycle){
             }
             --soundTimer;
         }
-        if (isRunning) { // might end up in endless loop
-            pc += 2; // TODO: check if pc is > than 4095
-            if (pc > 0xfff) {
-                return false; // TODO: fix
-            }
+        if (isRunning) {
+            pc += 2;
         }
     }
     return true;
