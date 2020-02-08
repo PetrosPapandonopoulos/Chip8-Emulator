@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
 
     Chip8 chip;
     try {
-        chip.loadGame(argv[1]);
+        chip.loadGame("pong.chip8");
     }
     catch (const std::runtime_error & error) {
         // TODO: popup window
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
         exit(2);
     }
 
-    while (window.isOpen()) {
+ while (window.isOpen()) {
         sf::Event event;
 
         while (window.pollEvent(event)) {

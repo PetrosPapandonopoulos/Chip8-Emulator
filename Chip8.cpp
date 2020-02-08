@@ -32,7 +32,7 @@ Chip8::Chip8() {
     pc = 0x200;      // Program counter starts at 0x200
     opcode = 0;      // Initialize current opcode
     I      = 0;      // Initialize index register
-    sp     = 0;      // Initialize stack pointer
+    sp     = -1;      // Initialize stack pointer
     delayTimer = 0;  // Initialize delayTimer
     soundTimer = 0;  // Initialize soundTimer
     isRunning = true;
@@ -90,6 +90,10 @@ unsigned char Chip8::getPixel(int i) {
     return gfx[i];
 }
 
+void Chip8::playSound() {
+    printf("%c", 7);
+}
+
 
 void Chip8::keyPressed(char key){
     if(waitForKey){         
@@ -127,8 +131,7 @@ bool Chip8::DecodeOpcode() {
             break;
         }
         case 0x2000: {          //2NNN: Calls subroutine at NNN
-            stack[sp] = pc;
-            ++sp;
+            stack[++sp] = pc;
             pc = opcode & 0x0FFF;
             break;
         }
@@ -388,6 +391,10 @@ bool Chip8::DecodeOpcode() {
             }
             break;
         }
+        default: {
+            printf("UNKNOWN OPCODE FOUND\n");
+        }
+        
     }
     return true;
 }

@@ -17,7 +17,7 @@ class Chip8 {
         unsigned short stack[16];		//Chip8 uses a stack
         unsigned short sp;				//stack pointer
 
-        unsigned char keys[16];			//HEX based keypad (0x0-0xF)
+        bool keys[16];			//HEX based keypad (0x0-0xF)
 
         unsigned char delayTimer;		//The two timer registers that count at 60 Hz
         unsigned char soundTimer;		//The system’s buzzer sounds whenever the sound timer reaches zero
