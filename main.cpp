@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
 
     Chip8 chip;
     try {
-        chip.loadGame("tetris.chip8");
+        chip.loadGame(argv[1]);
     }
     catch (const std::runtime_error & error) {
         window.close();
